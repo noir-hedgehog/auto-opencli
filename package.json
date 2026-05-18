@@ -63,7 +63,8 @@
     "check:typed-error-lint": "node scripts/check-typed-error-lint.mjs",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "docs:browser-scout": "node scripts/render-browser-history-scout-dashboard.mjs"
   },
   "keywords": [
     "cli",

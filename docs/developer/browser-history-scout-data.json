@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-05-18T21:58:00+08:00",
+  "profile": "configured Chrome profile",
+  "privacy": {
+    "storesRawHistory": false,
+    "aggregation": "full hostname, with subdomains kept separate",
+    "notes": "The daily scout should store aggregated counts and decisions only, not raw browsing URLs."
+  },
+  "summary": {
+    "domainsCollected": 0,
+    "candidateCommands": 0,
+    "createdCommands": 0,
+    "blockedOrDeferred": 0
+  },
+  "runs": [
+    {
+      "date": "2026-05-18",
+      "kind": "manual-seed",
+      "notes": "Initial dashboard scaffold. Daily automation should fill this file with aggregated hostname counts and CLI decisions."
+    }
+  ],
+  "domains": [],
+  "commandCandidates": [],
+  "createdCli": []
+}

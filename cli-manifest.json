@@ -12933,6 +12933,229 @@
     "navigateBefore": "https://www.instagram.com"
   },
   {
+    "site": "itsm",
+    "name": "list",
+    "description": "Segway-Ninebot ITSM 工作台单据列表，默认处理中",
+    "access": "read",
+    "domain": "itsm.segway-ninebot.com",
+    "strategy": "cookie",
+    "browser": true,
+    "args": [
+      {
+        "name": "view",
+        "type": "str",
+        "default": "processing",
+        "required": false,
+        "help": "View key/name: all / pending / processing / done, or Chinese view name"
+      },
+      {
+        "name": "query",
+        "type": "str",
+        "required": false,
+        "help": "Keyword filter applied locally to number/title/system/requester/assignee"
+      },
+      {
+        "name": "page",
+        "type": "int",
+        "default": 1,
+        "required": false,
+        "help": "Page number, starting from 1"
+      },
+      {
+        "name": "limit",
+        "type": "int",
+        "default": 20,
+        "required": false,
+        "help": "Rows per page (1-100)"
+      },
+      {
+        "name": "tenantId",
+        "type": "str",
+        "required": false,
+        "help": "ITSM tenant id; defaults to ITSM_TENANT_ID or ITSM_WORKSPACE_URL"
+      },
+      {
+        "name": "solutionId",
+        "type": "str",
+        "required": false,
+        "help": "ITSM solution id; defaults to ITSM_SOLUTION_ID or ITSM_WORKSPACE_URL"
+      }
+    ],
+    "columns": [
+      "rank",
+      "number",
+      "title",
+      "status",
+      "priority",
+      "serviceItem",
+      "system",
+      "requester",
+      "assignee",
+      "createTime",
+      "updateTime",
+      "sourceTable",
+      "id"
+    ],
+    "type": "js",
+    "modulePath": "itsm/list.js",
+    "sourceFile": "itsm/list.js",
+    "navigateBefore": false,
+    "siteSession": "persistent"
+  },
+  {
+    "site": "itsm",
+    "name": "show",
+    "aliases": [
+      "detail"
+    ],
+    "description": "Segway-Ninebot ITSM 单据详情，先支持需求提报类单据",
+    "access": "read",
+    "domain": "itsm.segway-ninebot.com",
+    "strategy": "cookie",
+    "browser": true,
+    "args": [
+      {
+        "name": "ticket",
+        "type": "str",
+        "required": true,
+        "positional": true,
+        "help": "Ticket number or id"
+      },
+      {
+        "name": "viewId",
+        "type": "str",
+        "required": false,
+        "help": "Detail view id override for unsupported source tables"
+      },
+      {
+        "name": "sourceTable",
+        "type": "str",
+        "required": false,
+        "help": "Source table override, e.g. T_REQUIREMENT"
+      },
+      {
+        "name": "lookupLimit",
+        "type": "int",
+        "default": 100,
+        "required": false,
+        "help": "Rows to scan in the 全部 view when resolving a ticket number (1-500)"
+      },
+      {
+        "name": "tenantId",
+        "type": "str",
+        "required": false,
+        "help": "ITSM tenant id; defaults to ITSM_TENANT_ID or ITSM_WORKSPACE_URL"
+      },
+      {
+        "name": "solutionId",
+        "type": "str",
+        "required": false,
+        "help": "ITSM solution id; defaults to ITSM_SOLUTION_ID or ITSM_WORKSPACE_URL"
+      }
+    ],
+    "columns": [
+      "number",
+      "title",
+      "status",
+      "priority",
+      "requester",
+      "assignee",
+      "serviceItem",
+      "system",
+      "submittedTime",
+      "updateTime",
+      "description",
+      "sourceTable",
+      "ticketId",
+      "viewId"
+    ],
+    "type": "js",
+    "modulePath": "itsm/show.js",
+    "sourceFile": "itsm/show.js",
+    "navigateBefore": false,
+    "siteSession": "persistent"
+  },
+  {
+    "site": "itsm",
+    "name": "summary",
+    "description": "Segway-Ninebot ITSM 工作台单据概览",
+    "access": "read",
+    "domain": "itsm.segway-ninebot.com",
+    "strategy": "cookie",
+    "browser": true,
+    "args": [
+      {
+        "name": "limit",
+        "type": "int",
+        "default": 100,
+        "required": false,
+        "help": "Rows to inspect from each main view (1-100)"
+      },
+      {
+        "name": "tenantId",
+        "type": "str",
+        "required": false,
+        "help": "ITSM tenant id; defaults to ITSM_TENANT_ID or ITSM_WORKSPACE_URL"
+      },
+      {
+        "name": "solutionId",
+        "type": "str",
+        "required": false,
+        "help": "ITSM solution id; defaults to ITSM_SOLUTION_ID or ITSM_WORKSPACE_URL"
+      }
+    ],
+    "columns": [
+      "view",
+      "total",
+      "visibleRows",
+      "statusBreakdown",
+      "assigneeBreakdown",
+      "latestUpdateTime"
+    ],
+    "type": "js",
+    "modulePath": "itsm/summary.js",
+    "sourceFile": "itsm/summary.js",
+    "navigateBefore": false,
+    "siteSession": "persistent"
+  },
+  {
+    "site": "itsm",
+    "name": "views",
+    "description": "Segway-Ninebot ITSM 工作台视图列表",
+    "access": "read",
+    "domain": "itsm.segway-ninebot.com",
+    "strategy": "cookie",
+    "browser": true,
+    "args": [
+      {
+        "name": "tenantId",
+        "type": "str",
+        "required": false,
+        "help": "ITSM tenant id; defaults to ITSM_TENANT_ID or ITSM_WORKSPACE_URL"
+      },
+      {
+        "name": "solutionId",
+        "type": "str",
+        "required": false,
+        "help": "ITSM solution id; defaults to ITSM_SOLUTION_ID or ITSM_WORKSPACE_URL"
+      }
+    ],
+    "columns": [
+      "rank",
+      "key",
+      "name",
+      "id",
+      "default",
+      "preset",
+      "rankNum"
+    ],
+    "type": "js",
+    "modulePath": "itsm/views.js",
+    "sourceFile": "itsm/views.js",
+    "navigateBefore": false,
+    "siteSession": "persistent"
+  },
+  {
     "site": "jd",
     "name": "add-cart",
     "description": "京东加入购物车",
