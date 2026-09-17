@@ -3,10 +3,12 @@ name: Trigger Website Rebuild (Docs Updated)
 on:
   push:
     branches: [main]
-    paths: ['docs/**']
+    paths: ['docs/**', '.github/workflows/docs.yml']
 
 jobs:
   dispatch:
+    # Only the upstream project deploys jackwener/opencli-website.
+    if: github.repository == 'jackwener/opencli'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger opencli-website rebuild
