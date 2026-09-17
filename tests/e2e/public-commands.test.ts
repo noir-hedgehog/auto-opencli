@@ -41,7 +41,7 @@ function isExpectedGoogleRestriction(code: number, stderr: string): boolean {
 function isExpectedDictionaryRestriction(code: number, stderr: string): boolean {
   if (code === 0) return false;
   return /\bfetch failed\b/.test(stderr)
-    || /HTTP (?:429|500|502|503|504) [^\n]*from https:\/\/api\.dictionaryapi\.dev\//.test(stderr);
+    || /HTTP (?:429|500|502|503|504|522) [^\n]*from https:\/\/api\.dictionaryapi\.dev\//.test(stderr);
 }
 
 // Keep old name as alias for existing tests
@@ -63,6 +63,8 @@ describe('dictionary live restriction detector', () => {
     'Error: fetch failed',
     'HTTP 429 Too Many Requests from https://api.dictionaryapi.dev/api/v2/entries/en/perfect',
     'HTTP 503 Service Unavailable from https://api.dictionaryapi.dev/api/v2/entries/en/perfect',
+    // Actual failure captured from both GitHub-hosted runners.
+    'ok: false\nerror:\n  code: FETCH_ERROR\n  message: HTTP 522 <none> from https://api.dictionaryapi.dev/api/v2/entries/en/perfect\n  exitCode: 1\n',
   ])('recognizes an explicit upstream failure: %s', (stderr) => {
     expect(isExpectedDictionaryRestriction(1, stderr)).toBe(true);
     expect(isExpectedDictionaryRestriction(0, stderr)).toBe(false);
