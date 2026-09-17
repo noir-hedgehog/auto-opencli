@@ -56,6 +56,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Test dictionary adapters with deterministic API responses
+        run: npx vitest run --project adapter clis/dictionary/commands.test.js --reporter=verbose
+
       - name: Build extension
         run: npm run build --prefix extension
 
