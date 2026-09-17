@@ -46,6 +46,11 @@ export ITSM_WORKSPACE_URL='https://itsm.segway-ninebot.com/#/itsm/workspace?...'
 
 ## Notes
 
+- `summary` groups only provided status and assignee values. Missing values are
+  counted separately in `missingStatusRows` and `missingAssigneeRows`, rather than
+  being reported as a status or person named `-`. These counts cover `visibleRows`
+  (the inspected page), not all tickets in `total`; a missing assignee value does
+  not by itself prove that the ticket is unassigned.
 - `show` currently has a verified detail-view mapping for requirement tickets
   (`T_REQUIREMENT`). For other source tables, open the ticket once in the
   browser and pass `--view-id` until the mapping is added.

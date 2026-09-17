@@ -13110,6 +13110,8 @@
       "visibleRows",
       "statusBreakdown",
       "assigneeBreakdown",
+      "missingStatusRows",
+      "missingAssigneeRows",
       "latestUpdateTime"
     ],
     "type": "js",
