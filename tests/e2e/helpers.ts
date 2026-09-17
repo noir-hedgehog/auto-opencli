@@ -17,6 +17,8 @@ export interface CliResult {
   stdout: string;
   stderr: string;
   code: number;
+  /** True only when the subprocess was terminated by its execution timeout. */
+  timedOut?: boolean;
 }
 
 /**
@@ -47,6 +49,7 @@ export async function runCli(
       stdout: err.stdout ?? '',
       stderr: err.stderr ?? '',
       code: err.code ?? 1,
+      timedOut: err.killed === true && err.signal === 'SIGTERM',
     };
   }
 }

@@ -32,7 +32,9 @@ function isExpectedApplePodcastsRestriction(code: number, stderr: string): boole
 function isExpectedGoogleRestriction(code: number, stderr: string): boolean {
   if (code === 0) return false;
   // Network unreachable (DNS/proxy) or HTTP error from Google
-  return /fetch failed/.test(stderr) || /Error \[FETCH_ERROR\]: HTTP (403|429|451|503)\b/.test(stderr);
+  return /fetch failed/.test(stderr)
+    || /Error \[FETCH_ERROR\]: HTTP (403|429|451|503)\b/.test(stderr)
+    || (/code: FETCH_ERROR\b/.test(stderr) && /message: HTTP (403|429|451|503)\b/.test(stderr));
 }
 
 // Dictionary API availability is outside the CLI's control. Keep schema and
@@ -55,6 +57,30 @@ describe('public command restriction detectors', () => {
         '⚠️ Unable to reach Apple Podcasts charts for US\n→ Apple charts may be temporarily unavailable (ECONNRESET). Try again later.\n',
       ),
     ).toBe(true);
+  });
+});
+
+describe('public API failure diagnostics', () => {
+  it.each([403, 429, 451, 503])('recognizes Google HTTP %s in current YAML errors', (status) => {
+    expect(isExpectedGoogleRestriction(1, `ok: false\nerror:\n  code: FETCH_ERROR\n  message: HTTP ${status}\n`)).toBe(true);
+    expect(isExpectedGoogleRestriction(1, `Error [FETCH_ERROR]: HTTP ${status}`)).toBe(true);
+  });
+
+  it.each([
+    'ok: false\nerror:\n  code: FETCH_ERROR\n  message: HTTP 404\n',
+    'ok: false\nerror:\n  code: NOT_FOUND\n  message: No news articles found\n',
+    'SyntaxError: HTTP 503',
+  ])('does not hide Google adapter errors: %s', (stderr) => {
+    expect(isExpectedGoogleRestriction(1, stderr)).toBe(false);
+  });
+
+  it('reports a terminated child distinctly from an ordinary command failure', async () => {
+    const timedOut = await runCli(['--help'], { timeout: 1 });
+    expect(timedOut.timedOut).toBe(true);
+    expect(timedOut.code).not.toBe(0);
+    const failed = await runCli(['nonexistent-command-for-timeout-test']);
+    expect(failed.timedOut).toBe(false);
+    expect(failed.code).not.toBe(0);
   });
 });
 
@@ -412,13 +438,12 @@ describe('public commands E2E', () => {
   }, 30_000);
 
   // ── google suggest (public JSON API) ──
-  it('google suggest returns suggestions', async () => {
+  it('google suggest returns suggestions', async ({ skip }) => {
     const { stdout, stderr, code } = await runCli(['google', 'suggest', 'python', '-f', 'json']);
     if (isExpectedGoogleRestriction(code, stderr)) {
-      console.warn(`google suggest skipped: ${stderr.trim()}`);
-      return;
+      skip(`google suggest skipped: ${stderr.trim()}`);
     }
-    expect(code).toBe(0);
+    expect(code, stderr || stdout).toBe(0);
     const data = parseJsonOutput(stdout);
     expect(Array.isArray(data)).toBe(true);
     expect(data.length).toBeGreaterThanOrEqual(1);
@@ -426,13 +451,12 @@ describe('public commands E2E', () => {
   }, 30_000);
 
   // ── google news (public RSS) ──
-  it('google news returns headlines', async () => {
+  it('google news returns headlines', async ({ skip }) => {
     const { stdout, stderr, code } = await runCli(['google', 'news', '--limit', '3', '-f', 'json']);
     if (isExpectedGoogleRestriction(code, stderr)) {
-      console.warn(`google news skipped: ${stderr.trim()}`);
-      return;
+      skip(`google news skipped: ${stderr.trim()}`);
     }
-    expect(code).toBe(0);
+    expect(code, stderr || stdout).toBe(0);
     const data = parseJsonOutput(stdout);
     expect(Array.isArray(data)).toBe(true);
     expect(data.length).toBeGreaterThanOrEqual(1);
@@ -441,13 +465,12 @@ describe('public commands E2E', () => {
     expect(data[0]).toHaveProperty('url');
   }, 30_000);
 
-  it('google news search returns results', async () => {
+  it('google news search returns results', async ({ skip }) => {
     const { stdout, stderr, code } = await runCli(['google', 'news', 'AI', '--limit', '3', '-f', 'json']);
     if (isExpectedGoogleRestriction(code, stderr)) {
-      console.warn(`google news search skipped: ${stderr.trim()}`);
-      return;
+      skip(`google news search skipped: ${stderr.trim()}`);
     }
-    expect(code).toBe(0);
+    expect(code, stderr || stdout).toBe(0);
     const data = parseJsonOutput(stdout);
     expect(Array.isArray(data)).toBe(true);
     expect(data.length).toBeGreaterThanOrEqual(1);
@@ -455,13 +478,12 @@ describe('public commands E2E', () => {
   }, 30_000);
 
   // ── google trends (public RSS) ──
-  it('google trends returns trending searches', async () => {
+  it('google trends returns trending searches', async ({ skip }) => {
     const { stdout, stderr, code } = await runCli(['google', 'trends', '--region', 'US', '--limit', '3', '-f', 'json']);
     if (isExpectedGoogleRestriction(code, stderr)) {
-      console.warn(`google trends skipped: ${stderr.trim()}`);
-      return;
+      skip(`google trends skipped: ${stderr.trim()}`);
     }
-    expect(code).toBe(0);
+    expect(code, stderr || stdout).toBe(0);
     const data = parseJsonOutput(stdout);
     expect(Array.isArray(data)).toBe(true);
     expect(data.length).toBeGreaterThanOrEqual(1);
@@ -526,7 +548,10 @@ describe('public commands E2E', () => {
 
   // ── dictionary (public API, browser: false) ──
   it('dictionary search returns word definitions', async ({ skip }) => {
-    const { stdout, stderr, code } = await runCli(['dictionary', 'search', 'serendipity', '-f', 'json']);
+    const { stdout, stderr, code, timedOut } = await runCli(['dictionary', 'search', 'serendipity', '-f', 'json'], { timeout: 25_000 });
+    if (timedOut) {
+      skip('Live dictionary command exceeded its 25s budget; deterministic adapter tests run separately.');
+    }
     if (isExpectedDictionaryRestriction(code, stderr)) {
       skip(`Dictionary API unavailable: ${stderr.trim()}`);
     }
@@ -537,10 +562,13 @@ describe('public commands E2E', () => {
     expect(data[0]).toHaveProperty('word', 'serendipity');
     expect(data[0]).toHaveProperty('phonetic');
     expect(data[0]).toHaveProperty('definition');
-  }, 30_000);
+  }, 35_000);
 
   it('dictionary synonyms returns synonyms', async ({ skip }) => {
-    const { stdout, stderr, code } = await runCli(['dictionary', 'synonyms', 'serendipity', '-f', 'json']);
+    const { stdout, stderr, code, timedOut } = await runCli(['dictionary', 'synonyms', 'serendipity', '-f', 'json'], { timeout: 25_000 });
+    if (timedOut) {
+      skip('Live dictionary command exceeded its 25s budget; deterministic adapter tests run separately.');
+    }
     if (isExpectedDictionaryRestriction(code, stderr)) {
       skip(`Dictionary API unavailable: ${stderr.trim()}`);
     }
@@ -550,10 +578,13 @@ describe('public commands E2E', () => {
     expect(data.length).toBeGreaterThanOrEqual(1);
     expect(data[0]).toHaveProperty('word', 'serendipity');
     expect(data[0]).toHaveProperty('synonyms');
-  }, 30_000);
+  }, 35_000);
 
   it('dictionary examples returns examples', async ({ skip }) => {
-    const { stdout, stderr, code } = await runCli(['dictionary', 'examples', 'perfect', '-f', 'json']);
+    const { stdout, stderr, code, timedOut } = await runCli(['dictionary', 'examples', 'perfect', '-f', 'json'], { timeout: 25_000 });
+    if (timedOut) {
+      skip('Live dictionary command exceeded its 25s budget; deterministic adapter tests run separately.');
+    }
     if (isExpectedDictionaryRestriction(code, stderr)) {
       skip(`Dictionary API unavailable: ${stderr.trim()}`);
     }
@@ -563,5 +594,5 @@ describe('public commands E2E', () => {
     expect(data.length).toBeGreaterThanOrEqual(1);
     expect(data[0]).toHaveProperty('word', 'perfect');
     expect(data[0]).toHaveProperty('example');
-  }, 30_000);
+  }, 35_000);
 });
